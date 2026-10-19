@@ -6,14 +6,14 @@ import { prisma } from "./lib/prisma.js";
 import productRoutes from "./routes/products.js";
 import authRoutes from "./routes/auth.js";
 import orderRoutes from "./routes/orders.js";
-
+import shipmentRoutes from "./routes/shipments.js";
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
-
+app.use("/shipments", shipmentRoutes);
 // Health check: kiểm tra Express và PostgreSQL
 app.get("/health", async (_req, res) => {
   try {

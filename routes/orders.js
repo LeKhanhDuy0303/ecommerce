@@ -185,4 +185,64 @@ router.post("/", authenticateToken, async (req, res) => {
   }
 });
 
+/* GET /orders/:id - Xem đơn hàng, chi tiết và Shipment */
+router.get("/:id", authenticateToken, async (req, res) => {
+  var oid = Number(req.params.id);
+
+  if (!Number.isInteger(oid) || oid <= 0) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid order ID"
+    });
+  }
+
+  try {
+    var order = await prisma.order.findUnique({
+      where: { oid: oid },
+      include: {
+        orderDetails: {
+          include: {
+            product: {
+              select: {
+                pid: true,
+                pname: true,
+                price: true
+              }
+            }
+          }
+        },
+        shipments: true
+      }
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found"
+      });
+    }
+
+    // Chỉ cho chủ đơn hàng xem thông tin đơn của mình
+    if (order.uid !== req.user.uid) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not allowed to view this order"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Order retrieved successfully",
+      data: order
+    });
+  } catch (error) {
+    console.error("Get order error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+});
+
 export default router;
